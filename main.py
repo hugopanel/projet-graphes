@@ -134,6 +134,19 @@ def trouver_circuit(tache, liste):
     return False
 
 
+def contient_arcs_negatifs(graphe : Graphe):
+    """
+    Retourne vrai si le graphe contient une tâche dont la durée est négative.
+
+    :param graphe: Le graphe
+    :return: bool Contient un arc négatif
+    """
+    for tache in graphe.taches:
+        if tache.duree < 0:
+            return True
+    return False
+
+
 if __name__ == "__main__":
     graphe = read_file("./files/table 1.txt")
     graphe = create_alpha(graphe)
@@ -143,3 +156,5 @@ if __name__ == "__main__":
 
     # Est-ce que le graphe possède un circuit ?
     print(contient_circuits(graphe))
+
+    print(contient_arcs_negatifs(graphe))
