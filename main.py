@@ -57,6 +57,15 @@ def read_file(file_path: str):
     return graph
 
 # TODO: Ajouter les successeurs ???
+def find_successors(graphe: Graphe):
+    for tache in graphe.taches:
+        if tache.predecesseurs is not None:
+            for pred in tache.predecesseurs:
+                if pred is not None:
+                    if pred.successeurs is None:
+                        pred.successeurs = np.array([])
+                    if tache not in pred.successeurs:
+                        pred.successeurs = np.append(pred.successeurs, [tache])
 
 
 def create_alpha(graphe: Graphe):
@@ -98,7 +107,7 @@ def create_omega(graphe: Graphe):
                     taches_sans_successeurs.remove(pred)
 
     omega = Tache()
-    omega.nom = len(graphe.taches) + 1
+    omega.nom = len(graphe.taches)
     omega.duree = 0
 
     omega.predecesseurs = taches_sans_successeurs
@@ -107,7 +116,30 @@ def create_omega(graphe: Graphe):
     return graphe
 
 
+def contient_circuits(graphe : Graphe):
+    """
+
+    :rtype: bool Contient un ou plusieurs circuits
+    """
+    return trouver_circuit(graphe.taches[-2], np.array([]))
+
+
+def trouver_circuit(tache, liste):
+    if tache in liste:
+        return True
+    if tache.successeurs is not None:
+        for successeur in tache.successeurs:
+            if trouver_circuit(successeur, np.append(liste, tache)):
+                return True
+    return False
+
+
 if __name__ == "__main__":
     graphe = read_file("./files/table 1.txt")
     graphe = create_alpha(graphe)
     graphe = create_omega(graphe)
+    # Ajout des successeurs
+    find_successors(graphe)
+
+    # Est-ce que le graphe possède un circuit ?
+    print(contient_circuits(graphe))
