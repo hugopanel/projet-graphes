@@ -116,26 +116,22 @@ def create_omega(graphe: Graphe):
     return graphe
 
 
-# TODO: Terminer. pas beau et pas fini
-def contains_circuits(graphe : Graphe):
+def contient_circuits(graphe : Graphe):
     """
 
     :rtype: bool Contient un ou plusieurs circuits
     """
-    taches = []
-    sommets_actuels = []
-    source = graphe.taches[0]
-    sommets_a_parcourir = []
-    circuit = False
-    while source is not None:
-        sommets_actuels = source.successeurs
-        for sommet in sommets_actuels:
-            if sommet in taches:
-                circuit = True
-                break
-            taches.append(taches)
+    return trouver_circuit(graphe.taches[-2], np.array([]))
 
-    return circuit
+
+def trouver_circuit(tache, liste):
+    if tache in liste:
+        return True
+    if tache.successeurs is not None:
+        for successeur in tache.successeurs:
+            if trouver_circuit(successeur, np.append(liste, tache)):
+                return True
+    return False
 
 
 if __name__ == "__main__":
@@ -144,3 +140,6 @@ if __name__ == "__main__":
     graphe = create_omega(graphe)
     # Ajout des successeurs
     find_successors(graphe)
+
+    # Est-ce que le graphe possède un circuit ?
+    print(contient_circuits(graphe))
