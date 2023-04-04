@@ -57,6 +57,15 @@ def read_file(file_path: str):
     return graph
 
 # TODO: Ajouter les successeurs ???
+def find_successors(graphe: Graphe):
+    for tache in graphe.taches:
+        if tache.predecesseurs is not None:
+            for pred in tache.predecesseurs:
+                if pred is not None:
+                    if pred.successeurs is None:
+                        pred.successeurs = np.array([])
+                    if tache not in pred.successeurs:
+                        pred.successeurs = np.append(pred.successeurs, [tache])
 
 
 def create_alpha(graphe: Graphe):
@@ -98,7 +107,7 @@ def create_omega(graphe: Graphe):
                     taches_sans_successeurs.remove(pred)
 
     omega = Tache()
-    omega.nom = len(graphe.taches) + 1
+    omega.nom = len(graphe.taches)
     omega.duree = 0
 
     omega.predecesseurs = taches_sans_successeurs
@@ -107,7 +116,31 @@ def create_omega(graphe: Graphe):
     return graphe
 
 
+# TODO: Terminer. pas beau et pas fini
+def contains_circuits(graphe : Graphe):
+    """
+
+    :rtype: bool Contient un ou plusieurs circuits
+    """
+    taches = []
+    sommets_actuels = []
+    source = graphe.taches[0]
+    sommets_a_parcourir = []
+    circuit = False
+    while source is not None:
+        sommets_actuels = source.successeurs
+        for sommet in sommets_actuels:
+            if sommet in taches:
+                circuit = True
+                break
+            taches.append(taches)
+
+    return circuit
+
+
 if __name__ == "__main__":
     graphe = read_file("./files/table 1.txt")
     graphe = create_alpha(graphe)
     graphe = create_omega(graphe)
+    # Ajout des successeurs
+    find_successors(graphe)
