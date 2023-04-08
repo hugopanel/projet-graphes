@@ -29,7 +29,7 @@ def read_file(file_path: str):
             # graph.taches = np.append(graph.taches, [t])  # On ajoute la tâche au graphe
 
         # On modifie la tâche en fonction de ce qu'on lit dans le fichier .txt :
-        task.duree = column[1]
+        task.duree = int(column[1])
 
         # S'il existe des contraintes (prédécesseurs), on les ajoute :
         if len(column) > 2:
@@ -57,7 +57,6 @@ def read_file(file_path: str):
     return graph
 
 
-# TODO: Ajouter les successeurs ???
 def find_successors(graphe: Graphe):
     for tache in graphe.taches:
         if tache.predecesseurs is not None:
@@ -83,7 +82,7 @@ def create_alpha(graphe: Graphe):
 
     alpha_exists = False  # Est-ce que alpha DEVRAIT exister # TODO: changer le nom
     for tache in graphe.taches:
-        if tache.predecesseurs is None:
+        if tache.predecesseurs.size == 0:
             alpha_exists = True
             tache.predecesseurs = np.array([alpha])
 
@@ -159,6 +158,32 @@ def contient_arcs_negatifs(graphe : Graphe):
     return False
 
 
+def calculer_rangs(graphe: Graphe):
+    taches = graphe.taches.copy()
+    taches: np.ndarray
+    taches_a_supprimer = []
+    k = 0
+    while taches.size > 0:
+        for tache in taches:
+            if len(tache.predecesseurs) == 0:
+                # On ajoute le rang à la tâche :
+                graphe.taches[np.argwhere(graphe.taches == tache).flatten()][0].rang = k
+                # On ajoute la tâche à la liste des tâches à supprimer
+                taches_a_supprimer.append(tache)
+
+        for tache in taches_a_supprimer:
+            # On supprime la tâche des prédécesseurs de ses successeurs :
+            for successeur in taches:
+                if tache in successeur.predecesseurs:
+                    successeur.predecesseurs = np.delete(successeur.predecesseurs,
+                       np.argwhere(np.array(successeur.predecesseurs) == tache).flatten())
+
+            # On supprime la tâche de la liste des tâches
+            taches = np.delete(taches, np.argwhere(taches == tache).flatten())
+        k += 1
+        taches_a_supprimer.clear()
+
+
 if __name__ == "__main__":
     try:
         graphe = read_file("./files/table 1.txt")
@@ -168,9 +193,13 @@ if __name__ == "__main__":
         find_successors(graphe)
 
         # Est-ce que le graphe possède un circuit ?
-        print(contient_circuits(graphe))
+        contient_circuits = contient_circuits(graphe)
+        print(contient_circuits)
 
         print(contient_arcs_negatifs(graphe))
+
+        if not contient_circuits:
+            calculer_rangs(graphe)
     except Exception:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
