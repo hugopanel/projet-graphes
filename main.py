@@ -80,11 +80,17 @@ def create_alpha(graphe: Graphe):
     alpha.nom = 0
     alpha.duree = 0
 
+    alpha_exists = False  # Est-ce que alpha DEVRAIT exister # TODO: changer le nom
     for tache in graphe.taches:
         if tache.predecesseurs.size == 0:
+            alpha_exists = True
             tache.predecesseurs = np.array([alpha])
 
-    graphe.taches = np.append(graphe.taches, [alpha])
+    if alpha_exists:
+        graphe.taches = np.append(graphe.taches, [alpha])
+    else:
+        raise Exception("Le graphe ne contient aucun sommet sans prédécesseur.")
+
     return graphe
 
 
@@ -97,22 +103,27 @@ def create_omega(graphe: Graphe):
     """
     # Regarder les tâches qui n'apparaissent pas dans les contraintes
     taches_sans_successeurs = []
+
     for tache in graphe.taches:
         taches_sans_successeurs.append(tache)
 
+    omega_exists = False
     for tache in graphe.taches:
         if tache.predecesseurs is not None:
             for pred in tache.predecesseurs:
                 if pred in taches_sans_successeurs:
+                    omega_exists = True
                     taches_sans_successeurs.remove(pred)
 
-    omega = Tache()
-    omega.nom = len(graphe.taches)
-    omega.duree = 0
+    if omega_exists:
+        omega = Tache()
+        omega.nom = len(graphe.taches)
+        omega.duree = 0
+        omega.predecesseurs = taches_sans_successeurs
+        graphe.taches = np.append(graphe.taches, [omega])
+    else:
+        raise Exception("Le graphe ne contient aucun sommet sans successeur.")
 
-    omega.predecesseurs = taches_sans_successeurs
-
-    graphe.taches = np.append(graphe.taches, [omega])
     return graphe
 
 
@@ -174,17 +185,23 @@ def calculer_rangs(graphe: Graphe):
 
 
 if __name__ == "__main__":
-    graphe = read_file("./files/table 1.txt")
-    graphe = create_alpha(graphe)
-    graphe = create_omega(graphe)
-    # Ajout des successeurs
-    find_successors(graphe)
+    try:
+        graphe = read_file("./files/table 1.txt")
+        graphe = create_alpha(graphe)
+        graphe = create_omega(graphe)
+        # Ajout des successeurs
+        find_successors(graphe)
 
-    # Est-ce que le graphe possède un circuit ?
-    contient_circuits = contient_circuits(graphe)
-    print(contient_circuits)
+        # Est-ce que le graphe possède un circuit ?
+        contient_circuits = contient_circuits(graphe)
+        print(contient_circuits)
 
-    print(contient_arcs_negatifs(graphe))
+        print(contient_arcs_negatifs(graphe))
 
-    if not contient_circuits:
-        calculer_rangs(graphe)
+        if not contient_circuits:
+            calculer_rangs(graphe)
+    except Exception:
+        # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
+        # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
+        # on a une erreur :
+        print("Une erreur est survenue.")
