@@ -13,8 +13,11 @@ class Tache:
     nom: int
     nom = None
 
+    rang: int
+    rang = None
+
     predecesseurs: np.ndarray
-    predecesseurs = None
+    predecesseurs = np.array([])
 
     successeurs: np.ndarray
-    successeurs = None
+    successeurs = np.array([])
