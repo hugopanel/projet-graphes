@@ -68,6 +68,43 @@ def find_successors(graphe: Graphe):
                         pred.successeurs = np.append(pred.successeurs, [tache])
 
 
+def trier_graphe(graphe: Graphe):
+    nouveau_graphe = Graphe()
+    for i in range(len(graphe.taches)):
+        for tache in graphe.taches:
+            if int(tache.nom) == i:
+                nouveau_graphe.taches = np.append(nouveau_graphe.taches, tache)
+    return nouveau_graphe
+
+
+def afficher_arcs(graphe: Graphe):
+    nb_arcs = 0
+    for tache in graphe.taches:
+        for successeur in tache.successeurs:
+            nb_arcs += 1
+            print(tache.nom, "->", successeur.nom, "=", tache.duree)
+    print(graphe.taches.size, "sommets")
+    print(nb_arcs, "arcs")
+
+
+def afficher_matrice_adjacence(graphe: Graphe):
+    mat = []
+
+    for tache in graphe.taches:
+        ligne = []
+        for successeur in graphe.taches:
+            if successeur in tache.successeurs:
+                ligne.append(tache.duree)
+            else:
+                ligne.append('*')
+        mat.append(ligne)
+
+    col1 = range(len(mat[0]))
+    col2 = range(len(mat))
+    df = pd.DataFrame(mat, index=col2, columns=col1)
+    print(df)
+
+
 def create_alpha(graphe: Graphe):
     """
     Crée la tâche alpha et l'ajoute au tableau de tâches du graphe.
@@ -158,12 +195,14 @@ def contient_arcs_negatifs(graphe : Graphe):
     return False
 
 
-def calculer_rangs(graphe: Graphe):
+def calculer_rangs(graphe: Graphe, afficher_sortie=True):
     taches = graphe.taches.copy()
     taches: np.ndarray
     taches_a_supprimer = []
     k = 0
     while taches.size > 0:
+        if afficher_sortie:
+            print("==== Itération", k)
         for tache in taches:
             if len(tache.predecesseurs) == 0:
                 # On ajoute le rang à la tâche :
@@ -171,6 +210,16 @@ def calculer_rangs(graphe: Graphe):
                 # On ajoute la tâche à la liste des tâches à supprimer
                 taches_a_supprimer.append(tache)
 
+        if afficher_sortie:
+            # Mettre la liste des tâches sous forme de chaîne de caractères :
+            liste = []
+            for tache in taches_a_supprimer:
+                liste.append(str(tache.nom))
+            chaine = str.join(', ', liste)
+            print("Points d'entrée :", chaine)
+
+        if afficher_sortie:
+            print("Suppression des points d'entrée...")
         for tache in taches_a_supprimer:
             # On supprime la tâche des prédécesseurs de ses successeurs :
             for successeur in taches:
@@ -180,28 +229,42 @@ def calculer_rangs(graphe: Graphe):
 
             # On supprime la tâche de la liste des tâches
             taches = np.delete(taches, np.argwhere(taches == tache).flatten())
+
+        if afficher_sortie:
+            # Mettre la liste des tâches sous forme de chaîne de caractères :
+            liste = []
+            for tache in taches:
+                liste.append(str(tache.nom))
+            chaine = str.join(', ', liste)
+            print("Sommets restants :", chaine)
         k += 1
         taches_a_supprimer.clear()
 
 
 if __name__ == "__main__":
     try:
-        graphe = read_file("./files/table 1.txt")
+        print("Construction du graphe d'ordonnancement :")
+        graphe = read_file("./files/table 13 test.txt")
         graphe = create_alpha(graphe)
         graphe = create_omega(graphe)
         # Ajout des successeurs
         find_successors(graphe)
 
+        graphe = trier_graphe(graphe)
+        afficher_arcs(graphe)
+        afficher_matrice_adjacence(graphe)
+
         # Est-ce que le graphe possède un circuit ?
         contient_circuits = contient_circuits(graphe)
-        print(contient_circuits)
+        print("Contient un ou plusieurs circuits :", contient_circuits)
 
-        print(contient_arcs_negatifs(graphe))
+        print("Contient des arcs négatifs :", contient_arcs_negatifs(graphe))
 
         if not contient_circuits:
             calculer_rangs(graphe)
-    except Exception:
+    except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
         # on a une erreur :
         print("Une erreur est survenue.")
+        print(e)
