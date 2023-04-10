@@ -262,6 +262,12 @@ if __name__ == "__main__":
 
         if not contient_circuits:
             calculer_rangs(graphe)
+
+            # Affichage des rangs
+            print("================== Rangs")
+            print("On trouve que :")
+            for tache in graphe.taches:
+                print(tache.nom, "a pour rang", tache.rang)
     except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
