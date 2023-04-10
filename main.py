@@ -26,16 +26,16 @@ def lire_fichier(chemin_fichier: str):
         for tache in graphe.taches:
             if tache.nom == colonne[0]:
                 b_tache_existe = True
-                tache = tache  # On récupère la tâche pour la modifier
+                sommet = tache  # On récupère la tâche pour la modifier
                 break  # On quitte la boucle
         if not b_tache_existe:
             # La tâche n'a pas été ajoutée, donc on la crée :
-            tache = Tache()
-            tache.nom = colonne[0]
+            sommet = Tache()
+            sommet.nom = colonne[0]
             # graph.taches = np.append(graph.taches, [t])  # On ajoute la tâche au graphe
 
         # On modifie la tâche en fonction de ce qu'on lit dans le fichier .txt :
-        tache.duree = int(colonne[1])
+        sommet.duree = int(colonne[1])
 
         # S'il existe des contraintes (prédécesseurs), on les ajoute :
         if len(colonne) > 2:
@@ -45,19 +45,19 @@ def lire_fichier(chemin_fichier: str):
                 for tache in graphe.taches:
                     if tache.nom == predecesseur:
                         # Elle existe, donc on la récupère
-                        predecesseur = tache
+                        pred = tache
                         b_predecesseur_existe = True
                         break
                 if not b_predecesseur_existe:  # Si elle n'a pas été ajoutée, on la crée :
-                    predecesseur = Tache()
-                    predecesseur.nom = predecesseur
-                    graphe.taches = np.append(graphe.taches, [predecesseur])  # On l'ajoute au graphe
+                    pred = Tache()
+                    pred.nom = predecesseur
+                    graphe.taches = np.append(graphe.taches, [pred])  # On l'ajoute au graphe
 
                 # On ajoute la contrainte à la liste des contraintes :
-                tache.predecesseurs = np.append(tache.predecesseurs, [predecesseur])
+                sommet.predecesseurs = np.append(sommet.predecesseurs, [pred])
 
         if not b_tache_existe:
-            graphe.taches = np.append(graphe.taches, [tache])
+            graphe.taches = np.append(graphe.taches, [sommet])
 
         ligne = fichier.readline()
     return graphe
@@ -201,7 +201,7 @@ def contient_circuits(graphe : Graphe):
     :param graphe: Le graphe à tester.
     :rtype: bool Contient un ou plusieurs circuits
     """
-    return trouver_circuit(graphe.taches[-2], np.array([]))
+    return trouver_circuit(graphe.taches[0], np.array([]))
 
 
 def trouver_circuit(tache, liste):
@@ -212,7 +212,7 @@ def trouver_circuit(tache, liste):
     """
     if tache in liste:
         return True
-    if tache.successeurs is not None:
+    if tache.successeurs.size != 0:
         for successeur in tache.successeurs:
             if trouver_circuit(successeur, np.append(liste, tache)):
                 return True
@@ -411,78 +411,78 @@ def chemins_critiques(tache: Tache, marges: [int]):
 
 
 if __name__ == "__main__":
-    try:
-        choice = 'y'
-        while choice == 'y':
-            fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
-            print("Choisissez un fichier à lire :")
-            for i in range(len(fichiers)):
-                print(i, "-", fichiers[i])
-            selection = int(input())
-            if selection not in range(len(fichiers)):
-                print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
-                input()
-                continue
+    # try:
+    choice = 'y'
+    while choice == 'y':
+        fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
+        print("Choisissez un fichier à lire :")
+        for i in range(len(fichiers)):
+            print(i, "-", fichiers[i])
+        selection = int(input())
+        if selection not in range(len(fichiers)):
+            print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
+            input()
+            continue
 
-            print("Construction du graphe d'ordonnancement :")
-            graphe = lire_fichier("./files/" + fichiers[selection])
-            graphe = ajouter_alpha(graphe)
-            graphe = ajouter_omega(graphe)
-            # Ajout des successeurs
-            trouver_successeurs(graphe)
-            graphe = trier_graphe(graphe)
+        print("Construction du graphe d'ordonnancement :")
+        graphe = lire_fichier("./files/" + fichiers[selection])
+        graphe = ajouter_alpha(graphe)
+        graphe = ajouter_omega(graphe)
+        # Ajout des successeurs
+        trouver_successeurs(graphe)
+        graphe = trier_graphe(graphe)
 
-            print("================== Arcs")
-            afficher_arcs(graphe)
-            print("================== Graphe sous forme matricielle")
-            afficher_matrice_adjacence(graphe)
-            print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
+        print("================== Arcs")
+        afficher_arcs(graphe)
+        print("================== Graphe sous forme matricielle")
+        afficher_matrice_adjacence(graphe)
+        print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
 
-            # Est-ce que le graphe possède un circuit ?
-            b_contient_circuits = contient_circuits(graphe)
-            b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
-            print("Contient un ou plusieurs circuits :", b_contient_circuits)
-            print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
+        # Est-ce que le graphe possède un circuit ?
+        b_contient_circuits = contient_circuits(graphe)
+        b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
+        print("Contient un ou plusieurs circuits :", b_contient_circuits)
+        print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
 
-            if not b_contient_circuits and not b_contient_arcs_negatifs:
-                print("Le graphe remplit les contraintes. On peut continuer.")
-                print("================== Calcul des rangs")
-                calculer_rangs(graphe)
+        if not b_contient_circuits and not b_contient_arcs_negatifs:
+            print("Le graphe remplit les contraintes. On peut continuer.")
+            print("================== Calcul des rangs")
+            calculer_rangs(graphe)
 
-                # Affichage des rangs
-                print("================== Résultat rangs")
-                print("On trouve que :")
-                for tache in graphe.taches:
-                    print(tache.nom, "a pour rang", tache.rang)
+            # Affichage des rangs
+            print("================== Résultat rangs")
+            print("On trouve que :")
+            for tache in graphe.taches:
+                print(tache.nom, "a pour rang", tache.rang)
 
-                print("================== Calendriers")
-                calendriers = calculer_calendriers(graphe)
+            print("================== Calendriers")
+            calendriers = calculer_calendriers(graphe)
 
-                print("Dates au plus tôt :")
-                for i in range(len(calendriers[0])):
-                    print(i, ":", calendriers[0][i])
-                print("Dates au plus tard :")
-                for i in range(len(calendriers[1])):
-                    print(i, ":", calendriers[1][i])
+            print("Dates au plus tôt :")
+            for i in range(len(calendriers[0])):
+                print(i, ":", calendriers[0][i])
+            print("Dates au plus tard :")
+            for i in range(len(calendriers[1])):
+                print(i, ":", calendriers[1][i])
 
-                marges = calculer_marges(calendriers)
-                print("Marges :")
-                for i in range(len(marges)):
-                    print(i, ":", marges[i])
+            marges = calculer_marges(calendriers)
+            print("Marges :")
+            for i in range(len(marges)):
+                print(i, ":", marges[i])
 
-                print("================== Chemins critiques")
-                critiques = trouver_chemins_critiques(graphe, marges)
-                for i in range(len(critiques)):
-                    print("Chemin critique", i, ":")
-                    chemin = []
-                    for sommet in critiques[i]:
-                        chemin.append(str(sommet.nom))
-                    print(str.join(" -> ", chemin))
-            else:
-                print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
-                      "On ne peut pas continuer.")
+            print("================== Chemins critiques")
+            critiques = trouver_chemins_critiques(graphe, marges)
+            for i in range(len(critiques)):
+                print("Chemin critique", i, ":")
+                chemin = []
+                for sommet in critiques[i]:
+                    chemin.append(str(sommet.nom))
+                print(str.join(" -> ", chemin))
+        else:
+            print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
+                  "On ne peut pas continuer.")
 
-            choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
-    except Exception as e:
-        print("Une erreur est survenue.")
-        print(e)
+        choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
+    # except Exception as e:
+    #     print("Une erreur est survenue.")
+    #     print(e)
