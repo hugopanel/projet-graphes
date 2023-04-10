@@ -411,78 +411,78 @@ def chemins_critiques(tache: Tache, marges: [int]):
 
 
 if __name__ == "__main__":
-    # try:
-    choice = 'y'
-    while choice == 'y':
-        fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
-        print("Choisissez un fichier à lire :")
-        for i in range(len(fichiers)):
-            print(i, "-", fichiers[i])
-        selection = int(input())
-        if selection not in range(len(fichiers)):
-            print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
-            input()
-            continue
+    try:
+        choice = 'y'
+        while choice == 'y':
+            fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
+            print("Choisissez un fichier à lire :")
+            for i in range(len(fichiers)):
+                print(i, "-", fichiers[i])
+            selection = int(input())
+            if selection not in range(len(fichiers)):
+                print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
+                input()
+                continue
 
-        print("Construction du graphe d'ordonnancement :")
-        graphe = lire_fichier("./files/" + fichiers[selection])
-        graphe = ajouter_alpha(graphe)
-        graphe = ajouter_omega(graphe)
-        # Ajout des successeurs
-        trouver_successeurs(graphe)
-        graphe = trier_graphe(graphe)
+            print("Construction du graphe d'ordonnancement :")
+            graphe = lire_fichier("./files/" + fichiers[selection])
+            graphe = ajouter_alpha(graphe)
+            graphe = ajouter_omega(graphe)
+            # Ajout des successeurs
+            trouver_successeurs(graphe)
+            graphe = trier_graphe(graphe)
 
-        print("================== Arcs")
-        afficher_arcs(graphe)
-        print("================== Graphe sous forme matricielle")
-        afficher_matrice_adjacence(graphe)
-        print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
+            print("================== Arcs")
+            afficher_arcs(graphe)
+            print("================== Graphe sous forme matricielle")
+            afficher_matrice_adjacence(graphe)
+            print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
 
-        # Est-ce que le graphe possède un circuit ?
-        b_contient_circuits = contient_circuits(graphe)
-        b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
-        print("Contient un ou plusieurs circuits :", b_contient_circuits)
-        print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
+            # Est-ce que le graphe possède un circuit ?
+            b_contient_circuits = contient_circuits(graphe)
+            b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
+            print("Contient un ou plusieurs circuits :", b_contient_circuits)
+            print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
 
-        if not b_contient_circuits and not b_contient_arcs_negatifs:
-            print("Le graphe remplit les contraintes. On peut continuer.")
-            print("================== Calcul des rangs")
-            calculer_rangs(graphe)
+            if not b_contient_circuits and not b_contient_arcs_negatifs:
+                print("Le graphe remplit les contraintes. On peut continuer.")
+                print("================== Calcul des rangs")
+                calculer_rangs(graphe)
 
-            # Affichage des rangs
-            print("================== Résultat rangs")
-            print("On trouve que :")
-            for tache in graphe.taches:
-                print(tache.nom, "a pour rang", tache.rang)
+                # Affichage des rangs
+                print("================== Résultat rangs")
+                print("On trouve que :")
+                for tache in graphe.taches:
+                    print(tache.nom, "a pour rang", tache.rang)
 
-            print("================== Calendriers")
-            calendriers = calculer_calendriers(graphe)
+                print("================== Calendriers")
+                calendriers = calculer_calendriers(graphe)
 
-            print("Dates au plus tôt :")
-            for i in range(len(calendriers[0])):
-                print(i, ":", calendriers[0][i])
-            print("Dates au plus tard :")
-            for i in range(len(calendriers[1])):
-                print(i, ":", calendriers[1][i])
+                print("Dates au plus tôt :")
+                for i in range(len(calendriers[0])):
+                    print(i, ":", calendriers[0][i])
+                print("Dates au plus tard :")
+                for i in range(len(calendriers[1])):
+                    print(i, ":", calendriers[1][i])
 
-            marges = calculer_marges(calendriers)
-            print("Marges :")
-            for i in range(len(marges)):
-                print(i, ":", marges[i])
+                marges = calculer_marges(calendriers)
+                print("Marges :")
+                for i in range(len(marges)):
+                    print(i, ":", marges[i])
 
-            print("================== Chemins critiques")
-            critiques = trouver_chemins_critiques(graphe, marges)
-            for i in range(len(critiques)):
-                print("Chemin critique", i, ":")
-                chemin = []
-                for sommet in critiques[i]:
-                    chemin.append(str(sommet.nom))
-                print(str.join(" -> ", chemin))
-        else:
-            print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
-                  "On ne peut pas continuer.")
+                print("================== Chemins critiques")
+                critiques = trouver_chemins_critiques(graphe, marges)
+                for i in range(len(critiques)):
+                    print("Chemin critique", i, ":")
+                    chemin = []
+                    for sommet in critiques[i]:
+                        chemin.append(str(sommet.nom))
+                    print(str.join(" -> ", chemin))
+            else:
+                print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
+                      "On ne peut pas continuer.")
 
-        choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
-    # except Exception as e:
-    #     print("Une erreur est survenue.")
-    #     print(e)
+            choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
+    except Exception as e:
+        print("Une erreur est survenue.")
+        print(e)
