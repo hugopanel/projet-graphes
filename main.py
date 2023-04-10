@@ -318,6 +318,21 @@ def calculer_marges(calendriers):
     return marges
 
 
+def trouver_chemins_critiques(graphe: Graphe, marges: [int]):
+    return chemins_critiques(graphe.taches[0], marges)
+
+
+def chemins_critiques(tache: Tache, marges: [int]):
+    if tache.successeurs.size == 0:
+        return [[tache]]
+    chemins = []
+    for successeur in tache.successeurs:
+        if marges[int(successeur.nom)] == 0:
+            for chemin in chemins_critiques(successeur, marges):
+                chemins.append([tache] + chemin)
+    return chemins
+
+
 if __name__ == "__main__":
     try:
         print("Construction du graphe d'ordonnancement :")
@@ -360,6 +375,16 @@ if __name__ == "__main__":
             print("Marges :")
             for i in range(len(marges)):
                 print(i, ":", marges[i])
+
+            print("================== Chemins critiques")
+            critiques = trouver_chemins_critiques(graphe, marges)
+            for i in range(len(critiques)):
+                print("Chemin critique", i, ":")
+                chemin = []
+                for sommet in critiques[i]:
+                    chemin.append(str(sommet.nom))
+                print(str.join(" -> ", chemin))
+
     except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
