@@ -26,16 +26,16 @@ def lire_fichier(chemin_fichier: str):
         for tache in graphe.taches:
             if tache.nom == colonne[0]:
                 b_tache_existe = True
-                tache = tache  # On récupère la tâche pour la modifier
+                sommet = tache  # On récupère la tâche pour la modifier
                 break  # On quitte la boucle
         if not b_tache_existe:
             # La tâche n'a pas été ajoutée, donc on la crée :
-            tache = Tache()
-            tache.nom = colonne[0]
+            sommet = Tache()
+            sommet.nom = colonne[0]
             # graph.taches = np.append(graph.taches, [t])  # On ajoute la tâche au graphe
 
         # On modifie la tâche en fonction de ce qu'on lit dans le fichier .txt :
-        tache.duree = int(colonne[1])
+        sommet.duree = int(colonne[1])
 
         # S'il existe des contraintes (prédécesseurs), on les ajoute :
         if len(colonne) > 2:
@@ -45,19 +45,19 @@ def lire_fichier(chemin_fichier: str):
                 for tache in graphe.taches:
                     if tache.nom == predecesseur:
                         # Elle existe, donc on la récupère
-                        predecesseur = tache
+                        pred = tache
                         b_predecesseur_existe = True
                         break
                 if not b_predecesseur_existe:  # Si elle n'a pas été ajoutée, on la crée :
-                    predecesseur = Tache()
-                    predecesseur.nom = predecesseur
-                    graphe.taches = np.append(graphe.taches, [predecesseur])  # On l'ajoute au graphe
+                    pred = Tache()
+                    pred.nom = predecesseur
+                    graphe.taches = np.append(graphe.taches, [pred])  # On l'ajoute au graphe
 
                 # On ajoute la contrainte à la liste des contraintes :
-                tache.predecesseurs = np.append(tache.predecesseurs, [predecesseur])
+                sommet.predecesseurs = np.append(sommet.predecesseurs, [pred])
 
         if not b_tache_existe:
-            graphe.taches = np.append(graphe.taches, [tache])
+            graphe.taches = np.append(graphe.taches, [sommet])
 
         ligne = fichier.readline()
     return graphe
@@ -201,7 +201,7 @@ def contient_circuits(graphe : Graphe):
     :param graphe: Le graphe à tester.
     :rtype: bool Contient un ou plusieurs circuits
     """
-    return trouver_circuit(graphe.taches[-2], np.array([]))
+    return trouver_circuit(graphe.taches[0], np.array([]))
 
 
 def trouver_circuit(tache, liste):
@@ -212,7 +212,7 @@ def trouver_circuit(tache, liste):
     """
     if tache in liste:
         return True
-    if tache.successeurs is not None:
+    if tache.successeurs.size != 0:
         for successeur in tache.successeurs:
             if trouver_circuit(successeur, np.append(liste, tache)):
                 return True
