@@ -341,7 +341,12 @@ if __name__ == "__main__":
             calculer_rangs(graphe)
 
             # Affichage des rangs
-            print("=========== Calendriers")
+            print("================== Rangs")
+            print("On trouve que :")
+            for tache in graphe.taches:
+                print(tache.nom, "a pour rang", tache.rang)
+
+            print("================== Calendriers")
             calendriers = calculer_calendriers(graphe)
 
             print("Dates au plus tôt :")
@@ -355,7 +360,6 @@ if __name__ == "__main__":
             print("Marges :")
             for i in range(len(marges)):
                 print(i, ":", marges[i])
-
     except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
