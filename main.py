@@ -258,31 +258,21 @@ def calculer_calendriers(graphe: Graphe):
     #   Indices des dates :
     #     - 0 : date au plus tôt
     #     - 1 : date au plus tard
-    calendrier = {}
+    calendrier_plus_tot = {}
+    calendrier_plus_tard = {}
 
+    # Calcul des dates au plus tôt :
     for tache in graphe.taches:
-        calculer_date_tot(calendrier, tache)
-    return calendrier
+        calculer_date_tot(calendrier_plus_tot, tache)
 
+    # Calcul des dates au plus tard :
+    calendrier_plus_tard[int(graphe.taches[-1].nom)] = calendrier_plus_tot[int(graphe.taches[-1].nom)]
+    for tache in graphe.taches:
+        calculer_date_tard(calendrier_plus_tard, tache)
 
-# def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
-#     if int(sommet.nom) in calendrier_plus_tot.keys():
-#         return calendrier_plus_tot[int(sommet.nom)]
-#
-#     # Le sommet n'a pas de date au plus tôt donc il faut la calculer :
-#     duree = 0
-#     for predecesseur in sommet.predecesseurs:
-#         if int(predecesseur.nom) in calendrier_plus_tot.keys():
-#             duree = calendrier_plus_tot[int(predecesseur.nom)] + predecesseur.duree if calendrier_plus_tot[int(predecesseur.nom)] + predecesseur.duree > duree else duree
-#         else:
-#             max = 0
-#             for tache in predecesseur.predecesseurs:
-#                 max = calculer_date_tot(calendrier_plus_tot, tache) if calculer_date_tot(calendrier_plus_tot, tache) > max else max
-#                 max += tache.duree
-#             calendrier_plus_tot[int(predecesseur.nom)] = max
-#             duree = max if max > duree else duree
-#     calendrier_plus_tot[int(sommet.nom)] = duree
-#     return duree
+    # On retourne le tout
+    return [calendrier_plus_tot, calendrier_plus_tard]
+
 
 def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
     if int(sommet.nom) in calendrier_plus_tot.keys():  # Si on a déjà calculé la date :
@@ -301,10 +291,37 @@ def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
     return calendrier_plus_tot
 
 
+def calculer_date_tard(calendrier_plus_tard: dict, sommet: Tache):
+    if int(sommet.nom) in calendrier_plus_tard.keys():  # Si on a déjà calculé la date :
+        return calendrier_plus_tard
+
+    # Sinon, on la calcule.
+    # Pour ça, on prend la date - duree la plus petite parmi les successeurs
+    duree = -1
+    for successeur in sommet.successeurs:
+        if int(successeur.nom) not in calendrier_plus_tard.keys():
+            # Calcul de la date du successeur :
+            calendrier_plus_tard = calculer_date_tard(calendrier_plus_tard, successeur)
+        date_succ = calendrier_plus_tard[int(successeur.nom)] - sommet.duree
+        if duree == -1:
+            duree = date_succ
+        else:
+            duree = date_succ if date_succ < duree else duree
+    calendrier_plus_tard[int(sommet.nom)] = duree
+    return calendrier_plus_tard
+
+
+def calculer_marges(calendriers):
+    marges = []
+    for i in range(len(calendriers[0])):
+        marges.append(calendriers[1][i] - calendriers[0][i])
+    return marges
+
+
 if __name__ == "__main__":
     try:
         print("Construction du graphe d'ordonnancement :")
-        graphe = read_file("./files/table 2.txt")
+        graphe = read_file("./files/table 14")
         graphe = create_alpha(graphe)
         graphe = create_omega(graphe)
         # Ajout des successeurs
@@ -323,7 +340,22 @@ if __name__ == "__main__":
         if not contient_circuits:
             calculer_rangs(graphe)
 
-            calendrier = calculer_calendriers(graphe)
+            # Affichage des rangs
+            print("=========== Calendriers")
+            calendriers = calculer_calendriers(graphe)
+
+            print("Dates au plus tôt :")
+            for i in range(len(calendriers[0])):
+                print(i, ":", calendriers[0][i])
+            print("Dates au plus tard :")
+            for i in range(len(calendriers[1])):
+                print(i, ":", calendriers[1][i])
+
+            marges = calculer_marges(calendriers)
+            print("Marges :")
+            for i in range(len(marges)):
+                print(i, ":", marges[i])
+
     except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
