@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from graphes import *
+from os import listdir
 
 
 def read_file(file_path: str):
@@ -334,29 +335,46 @@ def chemins_critiques(tache: Tache, marges: [int]):
 
 
 if __name__ == "__main__":
-    try:
+    # try:
+    choice = 'y'
+    while choice == 'y':
+        fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
+        print("Choisissez un fichier à lire :")
+        for i in range(len(fichiers)):
+            print(i, "-", fichiers[i])
+        selection = int(input())
+        if selection not in range(len(fichiers)):
+            print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
+            input()
+            continue
+
         print("Construction du graphe d'ordonnancement :")
-        graphe = read_file("./files/table 14")
+        graphe = read_file("./files/" + fichiers[selection])
         graphe = create_alpha(graphe)
         graphe = create_omega(graphe)
         # Ajout des successeurs
         find_successors(graphe)
-
         graphe = trier_graphe(graphe)
+
+        print("================== Arcs")
         afficher_arcs(graphe)
+        print("================== Graphe sous forme matricielle")
         afficher_matrice_adjacence(graphe)
+        print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
 
         # Est-ce que le graphe possède un circuit ?
-        contient_circuits = contient_circuits(graphe)
-        print("Contient un ou plusieurs circuits :", contient_circuits)
+        b_contient_circuits = contient_circuits(graphe)
+        b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
+        print("Contient un ou plusieurs circuits :", b_contient_circuits)
+        print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
 
-        print("Contient des arcs négatifs :", contient_arcs_negatifs(graphe))
-
-        if not contient_circuits:
+        if not b_contient_circuits and not b_contient_arcs_negatifs:
+            print("Le graphe remplit les contraintes. On peut continuer.")
+            print("================== Calcul des rangs")
             calculer_rangs(graphe)
 
             # Affichage des rangs
-            print("================== Rangs")
+            print("================== Résultat rangs")
             print("On trouve que :")
             for tache in graphe.taches:
                 print(tache.nom, "a pour rang", tache.rang)
@@ -384,10 +402,15 @@ if __name__ == "__main__":
                 for sommet in critiques[i]:
                     chemin.append(str(sommet.nom))
                 print(str.join(" -> ", chemin))
+        else:
+            print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
+                  "On ne peut pas continuer.")
 
-    except Exception as e:
-        # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
-        # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
-        # on a une erreur :
-        print("Une erreur est survenue.")
-        print(e)
+        choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
+
+    # except Exception as e:
+    #     # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
+    #     # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
+    #     # on a une erreur :
+    #     print("Une erreur est survenue.")
+    #     print(e)
