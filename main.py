@@ -239,12 +239,72 @@ def calculer_rangs(graphe: Graphe, afficher_sortie=True):
             print("Sommets restants :", chaine)
         k += 1
         taches_a_supprimer.clear()
+    # TODO: Créer une solution propre pour ne pas modifier le graphe de base et ne pas avoir à retrouver les
+    # prédécesseurs après !
+    retrouver_prédécesseurs(graphe)  # Patch temporaire
+
+
+def retrouver_prédécesseurs(graphe: Graphe):
+    for tache in graphe.taches:
+        for successeur in tache.successeurs:
+            successeur.predecesseurs = np.append(successeur.predecesseurs, tache)
+
+
+def calculer_calendriers(graphe: Graphe):
+    # Structure :
+    #   [[date au plus tôt], [date au plus tard]]
+    # Utilisation :
+    #   calendrier[indice du sommet][indice de la date]
+    #   Indices des dates :
+    #     - 0 : date au plus tôt
+    #     - 1 : date au plus tard
+    calendrier = {}
+
+    for tache in graphe.taches:
+        calculer_date_tot(calendrier, tache)
+    return calendrier
+
+
+# def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
+#     if int(sommet.nom) in calendrier_plus_tot.keys():
+#         return calendrier_plus_tot[int(sommet.nom)]
+#
+#     # Le sommet n'a pas de date au plus tôt donc il faut la calculer :
+#     duree = 0
+#     for predecesseur in sommet.predecesseurs:
+#         if int(predecesseur.nom) in calendrier_plus_tot.keys():
+#             duree = calendrier_plus_tot[int(predecesseur.nom)] + predecesseur.duree if calendrier_plus_tot[int(predecesseur.nom)] + predecesseur.duree > duree else duree
+#         else:
+#             max = 0
+#             for tache in predecesseur.predecesseurs:
+#                 max = calculer_date_tot(calendrier_plus_tot, tache) if calculer_date_tot(calendrier_plus_tot, tache) > max else max
+#                 max += tache.duree
+#             calendrier_plus_tot[int(predecesseur.nom)] = max
+#             duree = max if max > duree else duree
+#     calendrier_plus_tot[int(sommet.nom)] = duree
+#     return duree
+
+def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
+    if int(sommet.nom) in calendrier_plus_tot.keys():  # Si on a déjà calculé la date :
+        return calendrier_plus_tot
+
+    # Sinon, on la calcule.
+    # Pour ça, on prend la date + duree la plus haute parmi les prédécesseurs
+    duree = 0
+    for predecesseur in sommet.predecesseurs:
+        if int(predecesseur.nom) not in calendrier_plus_tot.keys():
+            # Calcul de la date du prédécesseur :
+            calendrier_plus_tot = calculer_date_tot(calendrier_plus_tot, predecesseur)
+        date_pred = calendrier_plus_tot[int(predecesseur.nom)] + predecesseur.duree
+        duree = date_pred if date_pred > duree else duree
+    calendrier_plus_tot[int(sommet.nom)] = duree
+    return calendrier_plus_tot
 
 
 if __name__ == "__main__":
     try:
         print("Construction du graphe d'ordonnancement :")
-        graphe = read_file("./files/table 13 test.txt")
+        graphe = read_file("./files/table 2.txt")
         graphe = create_alpha(graphe)
         graphe = create_omega(graphe)
         # Ajout des successeurs
@@ -262,6 +322,8 @@ if __name__ == "__main__":
 
         if not contient_circuits:
             calculer_rangs(graphe)
+
+            calendrier = calculer_calendriers(graphe)
     except Exception as e:
         # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
         # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
