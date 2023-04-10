@@ -4,61 +4,73 @@ from graphes import *
 from os import listdir
 
 
-def read_file(file_path: str):
+def lire_fichier(chemin_fichier: str):
+    """
+    Met un graphe en mémoire à partir d'un chemin vers un  fichier de contraintes.
+
+    :param chemin_fichier: Chemin vers le fichier à mettre en mémoire
+    :return: Le graphe de type Graphe.
+    """
     # Ouverture du fichier
-    # file = "./files/table 2.txt"
-    f = open(file_path, 'r')
+    fichier = open(chemin_fichier, 'r')
 
-    graph = Graphe()  # Initialisation du graphe
-    line = f.readline()  # Lecture du fichier
+    graphe = Graphe()  # Initialisation du graphe
+    ligne = fichier.readline()  # Lecture du fichier
 
-    while line:
-        line = line.strip()  # Supprimer les espaces et retours à la ligne au début et à la fin
-        column = line.split(' ')  # Découper la ligne en tableau à chaque espace
+    while ligne:
+        ligne = ligne.strip()  # Supprimer les espaces et retours à la ligne au début et à la fin
+        colonne = ligne.split(' ')  # Découper la ligne en tableau à chaque espace
 
         # On vérifie si la tâche a déjà été ajoutée au graphe
-        task_exists = False
-        for tache in graph.taches:
-            if tache.nom == column[0]:
-                task_exists = True
-                task = tache  # On récupère la tâche pour la modifier
+        b_tache_existe = False
+        for tache in graphe.taches:
+            if tache.nom == colonne[0]:
+                b_tache_existe = True
+                tache = tache  # On récupère la tâche pour la modifier
                 break  # On quitte la boucle
-        if not task_exists:
+        if not b_tache_existe:
             # La tâche n'a pas été ajoutée, donc on la crée :
-            task = Tache()
-            task.nom = column[0]
+            tache = Tache()
+            tache.nom = colonne[0]
             # graph.taches = np.append(graph.taches, [t])  # On ajoute la tâche au graphe
 
         # On modifie la tâche en fonction de ce qu'on lit dans le fichier .txt :
-        task.duree = int(column[1])
+        tache.duree = int(colonne[1])
 
         # S'il existe des contraintes (prédécesseurs), on les ajoute :
-        if len(column) > 2:
-            for pre in column[2:]:  # Pour chaque contrainte...
+        if len(colonne) > 2:
+            for predecesseur in colonne[2:]:  # Pour chaque contrainte...
                 # On vérifie si elle a déjà été ajoutée au graphe
-                pred_exists = False
-                for tache in graph.taches:
-                    if tache.nom == pre:
+                b_predecesseur_existe = False
+                for tache in graphe.taches:
+                    if tache.nom == predecesseur:
                         # Elle existe, donc on la récupère
                         predecesseur = tache
-                        pred_exists = True
+                        b_predecesseur_existe = True
                         break
-                if not pred_exists:  # Si elle n'a pas été ajoutée, on la crée :
+                if not b_predecesseur_existe:  # Si elle n'a pas été ajoutée, on la crée :
                     predecesseur = Tache()
-                    predecesseur.nom = pre
-                    graph.taches = np.append(graph.taches, [predecesseur])  # On l'ajoute au graphe
+                    predecesseur.nom = predecesseur
+                    graphe.taches = np.append(graphe.taches, [predecesseur])  # On l'ajoute au graphe
 
                 # On ajoute la contrainte à la liste des contraintes :
-                task.predecesseurs = np.append(task.predecesseurs, [predecesseur])
+                tache.predecesseurs = np.append(tache.predecesseurs, [predecesseur])
 
-        if not task_exists:
-            graph.taches = np.append(graph.taches, [task])
+        if not b_tache_existe:
+            graphe.taches = np.append(graphe.taches, [tache])
 
-        line = f.readline()
-    return graph
+        ligne = fichier.readline()
+    return graphe
 
 
-def find_successors(graphe: Graphe):
+def trouver_successeurs(graphe: Graphe):
+    """
+    Ajoute les successeurs de chaque tâche à un graphe.
+
+    Le graphe passé en paramètres est modifié directement. La fonction ne retourne rien.
+
+    :param graphe: Le graphe contenant les tâches à modifier.
+    """
     for tache in graphe.taches:
         if tache.predecesseurs is not None:
             for pred in tache.predecesseurs:
@@ -70,6 +82,12 @@ def find_successors(graphe: Graphe):
 
 
 def trier_graphe(graphe: Graphe):
+    """
+    Trie un graphe dans l'ordre croissant en fonction du nom des tâches.
+
+    :param graphe: Le graphe à trier.
+    :return: Le graphe trié.
+    """
     nouveau_graphe = Graphe()
     for i in range(len(graphe.taches)):
         for tache in graphe.taches:
@@ -79,6 +97,12 @@ def trier_graphe(graphe: Graphe):
 
 
 def afficher_arcs(graphe: Graphe):
+    """
+    Affiche les arcs d'un graphe et leurs valeurs sous la forme :
+    0 -> 1 = 2
+
+    :param graphe: Le graphe.
+    """
     nb_arcs = 0
     for tache in graphe.taches:
         for successeur in tache.successeurs:
@@ -89,6 +113,11 @@ def afficher_arcs(graphe: Graphe):
 
 
 def afficher_matrice_adjacence(graphe: Graphe):
+    """
+    Affiche le graphe sous forme matricielle.
+
+    :param graphe: Le graphe à afficher.
+    """
     mat = []
 
     for tache in graphe.taches:
@@ -106,7 +135,7 @@ def afficher_matrice_adjacence(graphe: Graphe):
     print(df)
 
 
-def create_alpha(graphe: Graphe):
+def ajouter_alpha(graphe: Graphe):
     """
     Crée la tâche alpha et l'ajoute au tableau de tâches du graphe.
 
@@ -118,13 +147,13 @@ def create_alpha(graphe: Graphe):
     alpha.nom = 0
     alpha.duree = 0
 
-    alpha_exists = False  # Est-ce que alpha DEVRAIT exister # TODO: changer le nom
+    alpha_devrait_exister = False
     for tache in graphe.taches:
         if tache.predecesseurs.size == 0:
-            alpha_exists = True
+            alpha_devrait_exister = True
             tache.predecesseurs = np.array([alpha])
 
-    if alpha_exists:
+    if alpha_devrait_exister:
         graphe.taches = np.append(graphe.taches, [alpha])
     else:
         raise Exception("Le graphe ne contient aucun sommet sans prédécesseur.")
@@ -132,7 +161,7 @@ def create_alpha(graphe: Graphe):
     return graphe
 
 
-def create_omega(graphe: Graphe):
+def ajouter_omega(graphe: Graphe):
     """
     Crée la tâche omega et l'ajoute au tableau de tâches du graphe.
 
@@ -145,15 +174,15 @@ def create_omega(graphe: Graphe):
     for tache in graphe.taches:
         taches_sans_successeurs.append(tache)
 
-    omega_exists = False
+    omega_devrait_exister = False
     for tache in graphe.taches:
         if tache.predecesseurs is not None:
             for pred in tache.predecesseurs:
                 if pred in taches_sans_successeurs:
-                    omega_exists = True
+                    omega_devrait_exister = True
                     taches_sans_successeurs.remove(pred)
 
-    if omega_exists:
+    if omega_devrait_exister:
         omega = Tache()
         omega.nom = len(graphe.taches)
         omega.duree = 0
@@ -167,13 +196,20 @@ def create_omega(graphe: Graphe):
 
 def contient_circuits(graphe : Graphe):
     """
+    Retourne vrai si le graphe contient un ou plusieurs circuits, faux sinon.
 
+    :param graphe: Le graphe à tester.
     :rtype: bool Contient un ou plusieurs circuits
     """
     return trouver_circuit(graphe.taches[-2], np.array([]))
 
 
 def trouver_circuit(tache, liste):
+    """
+    Fonction récursive pour trouver les circuits d'un graphe.
+
+    Préférer la fonction `contient_circuits` qui est plus simple à utiliser.
+    """
     if tache in liste:
         return True
     if tache.successeurs is not None:
@@ -185,10 +221,10 @@ def trouver_circuit(tache, liste):
 
 def contient_arcs_negatifs(graphe : Graphe):
     """
-    Retourne vrai si le graphe contient une tâche dont la durée est négative.
+    Retourne vrai si le graphe contient une tâche dont la durée est négative, faux sinon.
 
-    :param graphe: Le graphe
-    :return: bool Contient un arc négatif
+    :param graphe: Le graphe.
+    :return: bool Contient un arc négatif.
     """
     for tache in graphe.taches:
         if tache.duree < 0:
@@ -197,6 +233,12 @@ def contient_arcs_negatifs(graphe : Graphe):
 
 
 def calculer_rangs(graphe: Graphe, afficher_sortie=True):
+    """
+    Calcule les rangs de chaque tâche d'un graphe et les ajoute dans la propriété `rang` des tâches.
+
+    :param graphe: Le graphe contenant les tâches.
+    :param afficher_sortie: Si vrai, affiche les étapes de l'algorithme.
+    """
     taches = graphe.taches.copy()
     taches: np.ndarray
     taches_a_supprimer = []
@@ -242,23 +284,29 @@ def calculer_rangs(graphe: Graphe, afficher_sortie=True):
         taches_a_supprimer.clear()
     # TODO: Créer une solution propre pour ne pas modifier le graphe de base et ne pas avoir à retrouver les
     # prédécesseurs après !
-    retrouver_prédécesseurs(graphe)  # Patch temporaire
+    retrouver_predecesseurs(graphe)  # Patch temporaire
 
 
-def retrouver_prédécesseurs(graphe: Graphe):
+def retrouver_predecesseurs(graphe: Graphe):
+    """
+    Permet d'ajouter les prédécesseurs dans un graphe possédant déjà les successeurs.
+
+    Le graphe d'origine est modifié. Cette fonction ne retourne rien.
+
+    :param graphe: Le graphe possédant les successeurs.
+    """
     for tache in graphe.taches:
         for successeur in tache.successeurs:
             successeur.predecesseurs = np.append(successeur.predecesseurs, tache)
 
 
 def calculer_calendriers(graphe: Graphe):
-    # Structure :
-    #   [[date au plus tôt], [date au plus tard]]
-    # Utilisation :
-    #   calendrier[indice du sommet][indice de la date]
-    #   Indices des dates :
-    #     - 0 : date au plus tôt
-    #     - 1 : date au plus tard
+    """
+    Calcule les dates au plus tôt et plus tard d'un graphe.
+
+    :param graphe: Le graphe.
+    :return: Array contenant des dictionnaires des dates au plus tôt en indice 0 et des dates au plus tard en indice 1.
+    """
     calendrier_plus_tot = {}
     calendrier_plus_tard = {}
 
@@ -276,6 +324,11 @@ def calculer_calendriers(graphe: Graphe):
 
 
 def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
+    """
+    Fonction récursive pour trouver les dates au plus tôt d'un graphe.
+
+    Préférer la fonction `calculer_calendriers` qui est plus simple à utiliser.
+    """
     if int(sommet.nom) in calendrier_plus_tot.keys():  # Si on a déjà calculé la date :
         return calendrier_plus_tot
 
@@ -293,6 +346,11 @@ def calculer_date_tot(calendrier_plus_tot: dict, sommet: Tache):
 
 
 def calculer_date_tard(calendrier_plus_tard: dict, sommet: Tache):
+    """
+    Fonction récursive pour trouver les dates au plus tard d'un graphe.
+
+    Préférer la fonction `calculer_calendriers` qui est plus simple à utiliser.
+    """
     if int(sommet.nom) in calendrier_plus_tard.keys():  # Si on a déjà calculé la date :
         return calendrier_plus_tard
 
@@ -313,6 +371,12 @@ def calculer_date_tard(calendrier_plus_tard: dict, sommet: Tache):
 
 
 def calculer_marges(calendriers):
+    """
+    Calcule les marges d'un graphe à partir des dates au plus tôt et au plus tard.
+
+    :param calendriers: Calendrier obtenur grâce à la fonction `calculer_calendriers`.
+    :return: Array contenant les marges.
+    """
     marges = []
     for i in range(len(calendriers[0])):
         marges.append(calendriers[1][i] - calendriers[0][i])
@@ -320,10 +384,22 @@ def calculer_marges(calendriers):
 
 
 def trouver_chemins_critiques(graphe: Graphe, marges: [int]):
+    """
+    Retourne une liste de tous les chemins critiques d'un graphe.
+
+    :param graphe: Le graphe contenant les chemins critiques à trouver.
+    :param marges: Les marges calculées grâce à la fonction `calculer_marges`.
+    :return: Une liste des chemins critiques.
+    """
     return chemins_critiques(graphe.taches[0], marges)
 
 
 def chemins_critiques(tache: Tache, marges: [int]):
+    """
+    Fonction récursive pour trouver les chemins critiques.
+
+    Préférer la fonction `trouver_chemins_critiques` qui est plus simple à utiliser.
+    """
     if tache.successeurs.size == 0:
         return [[tache]]
     chemins = []
@@ -335,82 +411,78 @@ def chemins_critiques(tache: Tache, marges: [int]):
 
 
 if __name__ == "__main__":
-    # try:
-    choice = 'y'
-    while choice == 'y':
-        fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
-        print("Choisissez un fichier à lire :")
-        for i in range(len(fichiers)):
-            print(i, "-", fichiers[i])
-        selection = int(input())
-        if selection not in range(len(fichiers)):
-            print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
-            input()
-            continue
+    try:
+        choice = 'y'
+        while choice == 'y':
+            fichiers = sorted([f for f in listdir("./files/") if f.endswith('.txt')])
+            print("Choisissez un fichier à lire :")
+            for i in range(len(fichiers)):
+                print(i, "-", fichiers[i])
+            selection = int(input())
+            if selection not in range(len(fichiers)):
+                print("Choix invalide. Appuyez sur une touche pour recommencer la sélection.")
+                input()
+                continue
 
-        print("Construction du graphe d'ordonnancement :")
-        graphe = read_file("./files/" + fichiers[selection])
-        graphe = create_alpha(graphe)
-        graphe = create_omega(graphe)
-        # Ajout des successeurs
-        find_successors(graphe)
-        graphe = trier_graphe(graphe)
+            print("Construction du graphe d'ordonnancement :")
+            graphe = lire_fichier("./files/" + fichiers[selection])
+            graphe = ajouter_alpha(graphe)
+            graphe = ajouter_omega(graphe)
+            # Ajout des successeurs
+            trouver_successeurs(graphe)
+            graphe = trier_graphe(graphe)
 
-        print("================== Arcs")
-        afficher_arcs(graphe)
-        print("================== Graphe sous forme matricielle")
-        afficher_matrice_adjacence(graphe)
-        print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
+            print("================== Arcs")
+            afficher_arcs(graphe)
+            print("================== Graphe sous forme matricielle")
+            afficher_matrice_adjacence(graphe)
+            print("================== Vérifications des conditions pour être un graphe d'ordonnancement")
 
-        # Est-ce que le graphe possède un circuit ?
-        b_contient_circuits = contient_circuits(graphe)
-        b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
-        print("Contient un ou plusieurs circuits :", b_contient_circuits)
-        print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
+            # Est-ce que le graphe possède un circuit ?
+            b_contient_circuits = contient_circuits(graphe)
+            b_contient_arcs_negatifs = contient_arcs_negatifs(graphe)
+            print("Contient un ou plusieurs circuits :", b_contient_circuits)
+            print("Contient des arcs négatifs :", b_contient_arcs_negatifs)
 
-        if not b_contient_circuits and not b_contient_arcs_negatifs:
-            print("Le graphe remplit les contraintes. On peut continuer.")
-            print("================== Calcul des rangs")
-            calculer_rangs(graphe)
+            if not b_contient_circuits and not b_contient_arcs_negatifs:
+                print("Le graphe remplit les contraintes. On peut continuer.")
+                print("================== Calcul des rangs")
+                calculer_rangs(graphe)
 
-            # Affichage des rangs
-            print("================== Résultat rangs")
-            print("On trouve que :")
-            for tache in graphe.taches:
-                print(tache.nom, "a pour rang", tache.rang)
+                # Affichage des rangs
+                print("================== Résultat rangs")
+                print("On trouve que :")
+                for tache in graphe.taches:
+                    print(tache.nom, "a pour rang", tache.rang)
 
-            print("================== Calendriers")
-            calendriers = calculer_calendriers(graphe)
+                print("================== Calendriers")
+                calendriers = calculer_calendriers(graphe)
 
-            print("Dates au plus tôt :")
-            for i in range(len(calendriers[0])):
-                print(i, ":", calendriers[0][i])
-            print("Dates au plus tard :")
-            for i in range(len(calendriers[1])):
-                print(i, ":", calendriers[1][i])
+                print("Dates au plus tôt :")
+                for i in range(len(calendriers[0])):
+                    print(i, ":", calendriers[0][i])
+                print("Dates au plus tard :")
+                for i in range(len(calendriers[1])):
+                    print(i, ":", calendriers[1][i])
 
-            marges = calculer_marges(calendriers)
-            print("Marges :")
-            for i in range(len(marges)):
-                print(i, ":", marges[i])
+                marges = calculer_marges(calendriers)
+                print("Marges :")
+                for i in range(len(marges)):
+                    print(i, ":", marges[i])
 
-            print("================== Chemins critiques")
-            critiques = trouver_chemins_critiques(graphe, marges)
-            for i in range(len(critiques)):
-                print("Chemin critique", i, ":")
-                chemin = []
-                for sommet in critiques[i]:
-                    chemin.append(str(sommet.nom))
-                print(str.join(" -> ", chemin))
-        else:
-            print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
-                  "On ne peut pas continuer.")
+                print("================== Chemins critiques")
+                critiques = trouver_chemins_critiques(graphe, marges)
+                for i in range(len(critiques)):
+                    print("Chemin critique", i, ":")
+                    chemin = []
+                    for sommet in critiques[i]:
+                        chemin.append(str(sommet.nom))
+                    print(str.join(" -> ", chemin))
+            else:
+                print("Le graphe ne remplit pas les contraintes pour être un graphe d'ordonnancement. "
+                      "On ne peut pas continuer.")
 
-        choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
-
-    # except Exception as e:
-    #     # TODO: Créer des exceptions spécifiques pour ces précis pour retrouver le type d'exception.
-    #     # Si le graphe ne possède aucun sommet sans prédécesseur ou sans successeurs (alpha ou omega pas possible)
-    #     # on a une erreur :
-    #     print("Une erreur est survenue.")
-    #     print(e)
+            choice = input("Souhaitez-vous lire un autre graphe ? (y/n) ")
+    except Exception as e:
+        print("Une erreur est survenue.")
+        print(e)
